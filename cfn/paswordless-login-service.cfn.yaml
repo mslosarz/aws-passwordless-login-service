@@ -1,0 +1,285 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for passwordless login service that allows you to create an account (or login) to service using only your email address
+
+Parameters:
+  SolutionName:
+    Type: String
+  ArtifactName:
+    Type: String
+  S3Bucket:
+    Type: String
+
+Resources:
+  ApiGwFacade:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${SolutionName}-facade'
+      Description: !Sub 'This passwordless login service for ${SolutionName}.'
+      ProtocolType: HTTP
+
+  LambdaAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      Name: LambdaAuthorizer
+      ApiId: !Ref ApiGwFacade
+      AuthorizerType: REQUEST
+      AuthorizerUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthLambda.Arn}/invocations
+      AuthorizerResultTtlInSeconds: 500
+      AuthorizerPayloadFormatVersion: "2.0"
+      EnableSimpleResponses: true
+      IdentitySource:
+        - $request.header.Cookie
+      AuthorizerCredentialsArn: !GetAtt ApiGatewayAuthorizerRole.Arn
+
+  AuthLambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AuthLambda.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGwFacade}/authorizer/${LambdaAuthorizer}'
+
+  ApiGwDefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApiGwFacade
+      StageName: $default
+      AutoDeploy: true
+      Description: Default stage for api
+
+  ApiGatewayAuthorizerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: APIGatewayInvokeLambdaRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: APIGatewayInvokeLambdaPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt AuthLambda.Arn
+
+  # LOGOUT
+  LogoutIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGwFacade
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProxyLambda.Arn}/invocations
+      PayloadFormatVersion: "2.0"
+      IntegrationMethod: POST
+  LogoutRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGwFacade
+      RouteKey: ANY /logout/{proxy+}
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref LambdaAuthorizer
+      Target: !Sub integrations/${LogoutIntegration}
+  LogoutPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ProxyLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGwFacade}/*/ANY/logout/*
+
+  # LOGIN
+  LoginIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGwFacade
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProxyLambda.Arn}/invocations
+      PayloadFormatVersion: "2.0"
+      IntegrationMethod: POST
+  LoginRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGwFacade
+      RouteKey: ANY /login/{proxy+}
+      Target: !Sub integrations/${LoginIntegration}
+  LoginPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ProxyLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGwFacade}/*/ANY/login/*
+
+  # Lambda
+  ProxyLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref ArtifactName
+      Description: !Sub 'Proxy lambda for HTTP API GW'
+      FunctionName: !Sub '${SolutionName}-${AWS::AccountId}'
+      Handler: pl.software2.awsblocks.AppHandler::handleRequest
+      MemorySize: 512
+      PackageType: Zip
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: java21
+      Timeout: 15
+      Tags:
+        - Key: SolutionName
+          Value: !Ref SolutionName
+        - Key: ArtifactName
+          Value: !Ref ArtifactName
+    DependsOn:
+      - LambdaLogGroup
+      - LambdaExecutionRole
+
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SolutionName}-${AWS::AccountId}'
+      RetentionInDays: 5
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: lambda-logging
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SolutionName}-${AWS::AccountId}:*
+        - PolicyName: users-and-login-requests-dynamodb
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource:
+                  - !GetAtt LoginRequestsDB.Arn
+                  - !GetAtt UsersDb.Arn
+  # Auth Lambda
+  AuthLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref ArtifactName
+      Description: !Sub 'Auth lambda for HTTP API GW'
+      FunctionName: !Sub '${SolutionName}-auth-${AWS::AccountId}'
+      Handler: pl.software2.awsblocks.AuthHandler::handleRequest
+      MemorySize: 512
+      PackageType: Zip
+      Role: !GetAtt AuthLambdaExecutionRole.Arn
+      Runtime: java21
+      Timeout: 15
+      Tags:
+        - Key: SolutionName
+          Value: !Ref SolutionName
+        - Key: ArtifactName
+          Value: !Ref ArtifactName
+    DependsOn:
+      - AuthLambdaLogGroup
+      - AuthLambdaExecutionRole
+
+  AuthLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SolutionName}-auth-${AWS::AccountId}'
+      RetentionInDays: 5
+
+  AuthLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: lambda-logging
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SolutionName}-auth-${AWS::AccountId}:*
+        - PolicyName: users-and-login-requests-dynamodb
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource:
+                  - !GetAtt LoginRequestsDB.Arn
+                  - !GetAtt UsersDb.Arn
+  LoginRequestsDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "email"
+          AttributeType: "S"
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: "email"
+          KeyType: "HASH"
+      SSESpecification:
+        SSEType: KMS
+        SSEEnabled: true
+      TableName: !Sub ${SolutionName}-login-requests
+
+  UsersDb:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "email"
+          AttributeType: "S"
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: "email"
+          KeyType: "HASH"
+      SSESpecification:
+        SSEType: KMS
+        SSEEnabled: true
+      TableName: !Sub ${SolutionName}-users
+
+Outputs:
+  ApiGwFacade:
+    Description: Api Gw Id
+    Value: !Sub 'https://${ApiGwFacade}.execute-api.${AWS::Region}.amazonaws.com'
+    Export:
+      Name: !Sub '${SolutionName}-facade-endpoint'

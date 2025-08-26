@@ -1,0 +1,46 @@
+{
+  "version": "2.0",
+  "routeKey": "ANY /logout/{proxy+}",
+  "rawPath": "/logout/echo",
+  "rawQueryString": "",
+  "type": "REQUEST",
+  "routeArn": "arn:aws:execute-api:eu-west-1:512684079734:rh2gtinzme/$default/GET/logout/echo",
+  "identitySource": [
+    "toke2n"
+  ],
+  "cookies": [
+    "toke2n"
+  ],
+  "headers": {
+    "accept": "*/*",
+    "content-length": "0",
+    "cookie": "toke2n",
+    "host": "rh2gtinzme.execute-api.eu-west-1.amazonaws.com",
+    "user-agent": "curl/7.81.0",
+    "x-amzn-trace-id": "Root=1-680a172b-135b61fa3fa43a3539ed9a22",
+    "x-forwarded-for": "37.47.113.130",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "requestContext": {
+    "accountId": "512684079734",
+    "apiId": "rh2gtinzme",
+    "domainName": "rh2gtinzme.execute-api.eu-west-1.amazonaws.com",
+    "domainPrefix": "rh2gtinzme",
+    "http": {
+      "method": "GET",
+      "path": "/logout/echo",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "37.47.113.130",
+      "userAgent": "curl/7.81.0"
+    },
+    "requestId": "JhiOzjAPDoEEMEg=",
+    "routeKey": "ANY /logout/{proxy+}",
+    "stage": "$default",
+    "time": "24/Apr/2025:22:49:15 +0000",
+    "timeEpoch": 1745491755116
+  },
+  "pathParameters": {
+    "proxy": "echo"
+  }
+}
