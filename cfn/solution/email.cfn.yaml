@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for SES domain verification and templates used for token exchange
+
+Parameters:
+  SolutionName:
+    Type: String
+  DomainName:
+    Type: String
+  DomainHostedZoneId:
+    Type: String
+
+Resources:
+  EMailConfigurationSet:
+    Type: AWS::SES::ConfigurationSet
+    Properties:
+      Name: !Sub ${SolutionName}-enabled-email
+      SendingOptions:
+        SendingEnabled: true
+
+  EMailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref DomainName
+      ConfigurationSetAttributes:
+        ConfigurationSetName: !Ref EMailConfigurationSet
+
+  DkimDnsToken1:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !GetAtt EMailIdentity.DkimDNSTokenName1
+      Type: CNAME
+      HostedZoneId: !Ref DomainHostedZoneId
+      ResourceRecords:
+        - !GetAtt EMailIdentity.DkimDNSTokenValue1
+      TTL: 1800
+  DkimDnsToken2:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !GetAtt EMailIdentity.DkimDNSTokenName2
+      Type: CNAME
+      HostedZoneId: !Ref DomainHostedZoneId
+      ResourceRecords:
+        - !GetAtt EMailIdentity.DkimDNSTokenValue2
+      TTL: 1800
+  DkimDnsToken3:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !GetAtt EMailIdentity.DkimDNSTokenName3
+      Type: CNAME
+      HostedZoneId: !Ref DomainHostedZoneId
+      ResourceRecords:
+        - !GetAtt EMailIdentity.DkimDNSTokenValue2
+      TTL: 1800
+
+  EMailTemplate:
+    Type: AWS::SES::Template
+    Properties:
+      Template:
+        TemplateName: !Sub ${SolutionName}-email-token-verification
+        SubjectPart: !Sub ${SolutionName} | Login token
+        TextPart: !Sub |
+          Your login token\n
+          {{token}}
+        HtmlPart: !Sub |
+          <h1>Your login token</h1>
+          <p><h2>{{token}}</h2></p>
+
+Outputs:
+  EMailTemplate:
+    Description: Template id of verification email with token
+    Value: !Ref EMailTemplate
+  EMailTemplateName:
+    Description: Template name of verification email with token
+    Value: !Sub ${SolutionName}-email-token-verification
+  EMailConfigurationSet:
+    Description: Email configuration set id
+    Value: !Ref EMailConfigurationSet

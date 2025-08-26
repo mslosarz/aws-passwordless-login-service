@@ -12,7 +12,7 @@ delete_stack_and_wait() {
 
 S3_BUCKET=$(aws cloudformation describe-stacks --stack-name "$SOLUTION_NAME-s3" --output text  --query 'Stacks[0].Outputs[?OutputKey==`S3Bucket`].OutputValue')
 
-delete_stack_and_wait "$SOLUTION_NAME-paswordless-login-service"
+delete_stack_and_wait "$SOLUTION_NAME"
 
 echo "Cleaning... ${S3_BUCKET}"
 
@@ -22,4 +22,5 @@ aws s3api list-object-versions --bucket "${S3_BUCKET}" \
      | xargs -L1 aws s3api delete-object --bucket "${S3_BUCKET}"
 
 delete_stack_and_wait "$SOLUTION_NAME-s3"
+delete_stack_and_wait "$SOLUTION_NAME-domain"
 

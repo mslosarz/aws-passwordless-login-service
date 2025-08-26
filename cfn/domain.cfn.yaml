@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for domain used for hosting api gateway and used for sending email
+########################################################################################################################
+# This stack was moved out of solution as it's easier to keep domain with certificate independently to the application #
+########################################################################################################################
+Parameters:
+  DomainName:
+    Type: String
+  SolutionName:
+    Type: String
+
+Resources:
+  Domain:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref DomainName
+      DeletionPolicy: Retain
+
+  DomainCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref Domain
+        - DomainName: !Sub www.${DomainName}
+          HostedZoneId: !Ref Domain
+        - DomainName: !Sub api.${DomainName}
+          HostedZoneId: !Ref Domain
+        - DomainName: !Sub app.${DomainName}
+          HostedZoneId: !Ref Domain
+      SubjectAlternativeNames:
+        - !Sub www.${DomainName}
+        - !Sub api.${DomainName}
+        - !Sub app.${DomainName}
+      ValidationMethod: DNS
+
+  HostedZoneIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${SolutionName}/Domain/HostedZoneId'
+      Type: String
+      Value: !Ref Domain
+
+  DomainCertificateArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${SolutionName}/Domain/DomainCertificateArn'
+      Type: String
+      Value: !Ref DomainCertificate
+
+Outputs:
+  DomainName:
+    Description: Domain name
+    Value: !Ref DomainName
+  HostedZoneId:
+    Description: Hosted zone id of the domain
+    Value: !Ref Domain
+  DomainCertificateArn:
+    Description: Domain certificate arn
+    Value: !Ref DomainCertificate

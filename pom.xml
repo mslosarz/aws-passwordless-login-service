@@ -4,11 +4,19 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>pl.software2.awsblocks</groupId>
     <artifactId>passwordless-login-service</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <name>passwordless-login-service</name>
 
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>lambda-utilities</module>
+        <module>lambda-test-utilities</module>
+        <module>api-authorizer-lambda</module>
+        <module>api-login-lambda</module>
+        <module>api-echo-lambda</module>
+    </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -16,52 +24,28 @@
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
 
-        <jackson.version>2.18.3</jackson.version>
-
         <junit.version>5.11.0</junit.version>
-        <log4j.version>2.23.1</log4j.version>
+        <slf4j.version>2.24.1</slf4j.version>
+        <logback.version>1.5.7</logback.version>
         <lombok.version>1.18.36</lombok.version>
         <dagger.version>2.55</dagger.version>
-        <mockito-core.version>5.16.0</mockito-core.version>
-        <assertj-core.version>4.0.0-M1</assertj-core.version>
+
         <aws-lambda-java-core.version>1.2.3</aws-lambda-java-core.version>
         <aws-lambda-java-events.version>3.15.0</aws-lambda-java-events.version>
+        <amazon.awssdk.version>2.32.31</amazon.awssdk.version>
+
+        <mockito-core.version>5.16.0</mockito-core.version>
+        <assertj-core.version>4.0.0-M1</assertj-core.version>
+        <httpcore5.version>5.3.5</httpcore5.version>
+        <junit-bom.version>5.12.0</junit-bom.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-core</artifactId>
-            <version>${aws-lambda-java-core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-events</artifactId>
-            <version>${aws-lambda-java-events.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>com.google.dagger</groupId>
             <artifactId>dagger</artifactId>
             <version>${dagger.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -90,67 +74,57 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-lambda-java-core</artifactId>
+                <version>${aws-lambda-java-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-lambda-java-events</artifactId>
+                <version>${aws-lambda-java-events.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>sesv2</artifactId>
+                <version>${amazon.awssdk.version}</version>
+            </dependency>
+            <!-- LOGGING -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j2-impl</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.core5</groupId>
+                <artifactId>httpcore5</artifactId>
+                <version>${httpcore5.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.12.0</version>
+                <version>${junit-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>2.20.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.2</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
-                <configuration>
-                    <createDependencyReducedPom>false</createDependencyReducedPom>
-                    <finalName>lambda</finalName>
-                    <filters>
-                        <filter>
-                            <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>META-INF/*</exclude>
-                            </excludes>
-                        </filter>
-                    </filters>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <release>21</release>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>com.google.dagger</groupId>
-                            <artifactId>dagger-compiler</artifactId>
-                            <version>${dagger.version}</version>
-                        </path>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

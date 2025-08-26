@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for API GW as proxy
+
+Parameters:
+  SolutionName:
+    Type: String
+  DomainName:
+    Type: String
+  DomainCertificateArn:
+    Type: String
+  DomainHostedZoneId:
+    Type: String
+
+Resources:
+  ApiGwFacade:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${SolutionName}-facade
+      Description: !Sub 'This login service for ${SolutionName}.'
+      ProtocolType: HTTP
+
+  ApiGwDefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApiGwFacade
+      StageName: $default
+      AutoDeploy: true
+      Description: Default stage for api
+
+  ApiGwCustomDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !Sub api.${DomainName}
+      DomainNameConfigurations:
+        - CertificateArn: !Ref DomainCertificateArn
+          EndpointType: REGIONAL
+
+  ApiGwCustomDomainMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      ApiId: !Ref ApiGwFacade
+      DomainName: !Sub api.${DomainName}
+      Stage: !Ref ApiGwDefaultStage
+
+  APIDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref DomainHostedZoneId
+      Name: !Sub api.${DomainName}.
+      Type: A
+      AliasTarget:
+        DNSName: !Sub ${ApiGwFacade}.execute-api.${AWS::Region}.amazonaws.com
+        HostedZoneId: !GetAtt ApiGwCustomDomain.RegionalHostedZoneId
+        EvaluateTargetHealth: false
+
+Outputs:
+  ApiGwId:
+    Description: Api Gw ID
+    Value: !Ref ApiGwFacade
+  CustomExecutionDomainName:
+    Description: Custom execution domain name
+    Value: !Sub api.${DomainName}
+

@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for route /echo/{proxy+} and lambda
+
+Parameters:
+  SolutionName:
+    Type: String
+  ArtifactName:
+    Type: String
+  S3Bucket:
+    Type: String
+  Version:
+    Type: String
+  ApiId:
+    Type: String
+
+  LambdaName:
+    Type: String
+  LambdaAuthorizer:
+    Type: String
+
+Resources:
+  Route:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiId
+      RouteKey: ANY /echo/{proxy+}
+      Target: !Sub integrations/${LambdaIntegration}
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref LambdaAuthorizer
+
+  LambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiId
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Lambda.Arn}/invocations
+      PayloadFormatVersion: "2.0"
+      IntegrationMethod: POST
+
+  RoutePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt Lambda.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/ANY/echo/*
+
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Sub ${Version}/${ArtifactName}.jar
+      Description: !Sub 'Lambda for /login/{proxy+} HTTP API GW'
+      FunctionName: !Sub '${SolutionName}-${LambdaName}-${AWS::AccountId}'
+      Handler: pl.software2.awsblocks.LambdaHandler::handleRequest
+      MemorySize: 512
+      PackageType: Zip
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: java21
+      Timeout: 15
+      Tags:
+        - Key: SolutionName
+          Value: !Ref SolutionName
+        - Key: ArtifactName
+          Value: !Ref ArtifactName
+    DependsOn:
+      - LambdaLogGroup
+      - LambdaExecutionRole
+
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${SolutionName}-${LambdaName}-${AWS::AccountId}'
+      RetentionInDays: 5
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: lambda-logging
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SolutionName}-${LambdaName}-${AWS::AccountId}:*

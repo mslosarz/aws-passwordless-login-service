@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for DynamoDBs and other persistence layer
+
+Parameters:
+  SolutionName:
+    Type: String
+
+Resources:
+  UsersDb:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "email"
+          AttributeType: "S"
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: "email"
+          KeyType: "HASH"
+      SSESpecification:
+        SSEType: KMS
+        SSEEnabled: true
+      TableName: !Sub ${SolutionName}-users
+
+  LoginRequestsDb:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "email"
+          AttributeType: "S"
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: "email"
+          KeyType: "HASH"
+      SSESpecification:
+        SSEType: KMS
+        SSEEnabled: true
+      TableName: !Sub ${SolutionName}-login-requests
+      TimeToLiveSpecification:
+        AttributeName: TTLExampleAttribute
+        Enabled: true
+
+Outputs:
+  UsersDb:
+    Description: User dynamodb table name
+    Value: !Ref UsersDb
+  UsersDbArn:
+    Description: User dynamodb table arn
+    Value: !GetAtt UsersDb.Arn
+  LoginRequestsDb:
+    Description: Login requests table name
+    Value: !Ref LoginRequestsDb
+  LoginRequestsDbArn:
+    Description: Login requests table arn
+    Value: !GetAtt LoginRequestsDb.Arn

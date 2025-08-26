@@ -1,0 +1,53 @@
+package pl.software2.awsblocks;
+
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import pl.software2.awsblocks.lambda.routes.RouteHandler;
+import pl.software2.awsblocks.lambda.routes.content.ApiGatewayResponseProducer;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Set;
+
+import static java.util.Comparator.comparingInt;
+
+@Slf4j
+public class LambdaHandler implements RequestStreamHandler {
+    private static final AppComponent component = DaggerAppComponent.create();
+
+    static {
+        java.security.Security.setProperty("networkaddress.cache.ttl", "0");
+    }
+
+    @Inject
+    ObjectMapper objectMapper;
+    @Inject
+    ApiGatewayResponseProducer responseProducer;
+    @Inject
+    Set<RouteHandler> routes;
+
+    public LambdaHandler() {
+        component.inject(this);
+    }
+
+    @Override
+    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
+        var event = objectMapper.readValue(inputStream, APIGatewayV2HTTPEvent.class);
+        log.info("Received APIGatewayV2HTTPEvent: {}", event);
+
+        APIGatewayV2HTTPResponse response = routes.stream()
+                .sorted(comparingInt(RouteHandler::priority))
+                .filter(route -> route.supports(event))
+                .findFirst()
+                .map(routeHandler -> routeHandler.handle(event))
+                .orElse(responseProducer.notFound(event.getRawPath()));
+
+        objectMapper.writeValue(outputStream, response);
+    }
+}
