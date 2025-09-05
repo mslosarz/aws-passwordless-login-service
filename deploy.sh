@@ -87,7 +87,7 @@ collect_lambda_names() {
 deploy_solution() {
   S3_BUCKET=$1
 
-  CURRENT_SOLUTION_NAME="$SOLUTION_NAME"
+  CURRENT_SOLUTION_NAME="$SOLUTION_NAME-paswordless"
 
   STACK_EXISTS=$(aws cloudformation describe-stacks --stack-name "$CURRENT_SOLUTION_NAME" || echo "create")
   LAMBDAS=$(collect_lambda_names)
@@ -97,8 +97,8 @@ deploy_solution() {
         --template-url https://${S3_BUCKET}.s3.amazonaws.com/${TIMESTAMP}/cfn/paswordless-login-service.cfn.yaml \
         --parameters ParameterKey=SolutionName,ParameterValue=$CURRENT_SOLUTION_NAME \
                      ParameterKey=S3Bucket,ParameterValue=$S3_BUCKET \
-                     ParameterKey=DomainStack,ParameterValue=${SOLUTION_NAME}-domain \
                      ParameterKey=DomainName,ParameterValue=$DOMAIN_NAME \
+                     ParameterKey=DomainStack,ParameterValue=$SOLUTION_NAME-domain \
                      ParameterKey=Version,ParameterValue=$TIMESTAMP \
                      ${LAMBDAS} \
         --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
