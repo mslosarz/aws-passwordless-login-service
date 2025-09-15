@@ -27,7 +27,7 @@ wait_stack_update_completed() {
 }
 
 build_app() {
-  mvn clean verify
+  ./mvnw clean verify
 }
 
 upload_artifacts_to_s3() {
@@ -129,7 +129,11 @@ upload_artifacts_to_s3 "$S3_BUCKET"
 deploy_solution "$S3_BUCKET"
 
 SITE_URL=$(aws cloudformation describe-stacks --stack-name "$SOLUTION_NAME-paswordless" --output text  --query 'Stacks[0].Outputs[?OutputKey==`ApiGwFacade`].OutputValue')
+DOMAIN_ENDPOINT=$(echo "https://api.${DOMAIN_NAME}")
 echo "============================================"
-echo "Visit: $SITE_URL"
+echo "Visit: $DOMAIN_ENDPOINT"
+echo "API GW: $SITE_URL"
 echo "============================================"
+echo "Now you can try to generate token using script"
+echo "./send_token.sh $DOMAIN_ENDPOINT <email>"
 

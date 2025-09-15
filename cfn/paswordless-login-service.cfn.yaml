@@ -45,7 +45,7 @@ Resources:
   PersistenceStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://${S3Bucket}.s3.amazonaws.com/${Version}/cfn/solution/persistance.cfn.yaml
+      TemplateURL: !Sub https://${S3Bucket}.s3.amazonaws.com/${Version}/cfn/solution/persistence.cfn.yaml
       Parameters:
         SolutionName: !Ref SolutionName
 
@@ -62,8 +62,8 @@ Resources:
         ApiId: !GetAtt ApiStack.Outputs.ApiGwId
         LambdaName: 'auth'
 
-        LoginRequestsDbArn: !GetAtt PersistenceStack.Outputs.LoginRequestsDbArn
-        UsersDbArn: !GetAtt PersistenceStack.Outputs.UsersDbArn
+        LoginRequestsTableArn: !GetAtt PersistenceStack.Outputs.LoginRequestsTableArn
+        UsersTableArn: !GetAtt PersistenceStack.Outputs.UsersTableArn
 
   LoginRouteLambdaStack:
     Type: AWS::CloudFormation::Stack
@@ -79,8 +79,10 @@ Resources:
 
         DomainName: !Ref DomainName
 
-        LoginRequestsDbArn: !GetAtt PersistenceStack.Outputs.LoginRequestsDbArn
-        UsersDbArn: !GetAtt PersistenceStack.Outputs.UsersDbArn
+        LoginRequestsTableArn: !GetAtt PersistenceStack.Outputs.LoginRequestsTableArn
+        LoginRequestsTableName: !GetAtt PersistenceStack.Outputs.LoginRequestsTable
+        UsersTableArn: !GetAtt PersistenceStack.Outputs.UsersTableArn
+        UsersTableName: !GetAtt PersistenceStack.Outputs.UsersTable
 
         EMailTemplate: !GetAtt EMailStack.Outputs.EMailTemplate
         EMailTemplateName: !GetAtt EMailStack.Outputs.EMailTemplateName

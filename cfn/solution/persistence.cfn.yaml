@@ -6,7 +6,7 @@ Parameters:
     Type: String
 
 Resources:
-  UsersDb:
+  UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -21,7 +21,7 @@ Resources:
         SSEEnabled: true
       TableName: !Sub ${SolutionName}-users
 
-  LoginRequestsDb:
+  LoginRequestsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
@@ -36,19 +36,19 @@ Resources:
         SSEEnabled: true
       TableName: !Sub ${SolutionName}-login-requests
       TimeToLiveSpecification:
-        AttributeName: TTLExampleAttribute
+        AttributeName: expiresAt
         Enabled: true
 
 Outputs:
-  UsersDb:
+  UsersTable:
     Description: User dynamodb table name
-    Value: !Ref UsersDb
-  UsersDbArn:
+    Value: !Ref UsersTable
+  UsersTableArn:
     Description: User dynamodb table arn
-    Value: !GetAtt UsersDb.Arn
-  LoginRequestsDb:
+    Value: !GetAtt UsersTable.Arn
+  LoginRequestsTable:
     Description: Login requests table name
-    Value: !Ref LoginRequestsDb
-  LoginRequestsDbArn:
+    Value: !Ref LoginRequestsTable
+  LoginRequestsTableArn:
     Description: Login requests table arn
-    Value: !GetAtt LoginRequestsDb.Arn
+    Value: !GetAtt LoginRequestsTable.Arn

@@ -18,9 +18,13 @@ Parameters:
 
   LambdaName:
     Type: String
-  LoginRequestsDbArn:
+  LoginRequestsTableName:
     Type: String
-  UsersDbArn:
+  LoginRequestsTableArn:
+    Type: String
+  UsersTableArn:
+    Type: String
+  UsersTableName:
     Type: String
 
   EMailTemplate:
@@ -73,6 +77,10 @@ Resources:
         Variables:
           TEMPLATE_NAME: !Ref EMailTemplateName
           DOMAIN_NAME: !Ref DomainName
+          NO_REPLY_ACCOUNT: no-reply
+          LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTableName
+          USERS_TABLE: !Ref UsersTableName
+          TOKEN_VALIDITY_IN_MINUTES: 10
       Tags:
         - Key: SolutionName
           Value: !Ref SolutionName
@@ -121,8 +129,8 @@ Resources:
                 Action:
                   - dynamodb:*
                 Resource:
-                  - !Ref LoginRequestsDbArn
-                  - !Ref UsersDbArn
+                  - !Ref LoginRequestsTableArn
+                  - !Ref UsersTableArn
         - PolicyName: sending-templated-emails
           PolicyDocument:
             Version: '2012-10-17'

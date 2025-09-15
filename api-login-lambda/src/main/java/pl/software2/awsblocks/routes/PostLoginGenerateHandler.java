@@ -7,20 +7,20 @@ import pl.software2.awsblocks.lambda.routes.content.ApiGatewayResponseProducer;
 import pl.software2.awsblocks.lambda.routes.content.PayloadDecoder;
 import pl.software2.awsblocks.model.GenerateTokenRequest;
 import pl.software2.awsblocks.model.GenerateTokenResponse;
-import pl.software2.awsblocks.service.auth.StoreLoginRequestAndSendToken;
+import pl.software2.awsblocks.service.ProcessGenerateLoginRequestService;
 
 import javax.inject.Inject;
 
 
 @Slf4j
 public class PostLoginGenerateHandler extends AbstractRouteHandler<GenerateTokenResponse> {
-    private final StoreLoginRequestAndSendToken service;
+    private final ProcessGenerateLoginRequestService service;
     private final PayloadDecoder payloadDecoder;
 
     @Inject
     public PostLoginGenerateHandler(
             ApiGatewayResponseProducer producer,
-            StoreLoginRequestAndSendToken service,
+            ProcessGenerateLoginRequestService service,
             PayloadDecoder payloadDecoder) {
         super(producer);
         this.service = service;
@@ -36,7 +36,6 @@ public class PostLoginGenerateHandler extends AbstractRouteHandler<GenerateToken
 
     @Override
     protected GenerateTokenResponse handleRequest(APIGatewayV2HTTPEvent request) {
-        log.info("Handling request: {}", request);
         return service.handle(payloadDecoder.extractBody(request, GenerateTokenRequest.class));
     }
 }

@@ -14,9 +14,9 @@ Parameters:
     Type: String
   LambdaName:
     Type: String
-  LoginRequestsDbArn:
+  LoginRequestsTableArn:
     Type: String
-  UsersDbArn:
+  UsersTableArn:
     Type: String
 
 Resources:
@@ -104,8 +104,8 @@ Resources:
                 Action:
                   - dynamodb:*
                 Resource:
-                  - !Ref LoginRequestsDbArn
-                  - !Ref UsersDbArn
+                  - !Ref LoginRequestsTableArn
+                  - !Ref UsersTableArn
 
   ApiGatewayAuthorizerRole:
     Type: AWS::IAM::Role

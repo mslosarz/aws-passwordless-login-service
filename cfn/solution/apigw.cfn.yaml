@@ -23,7 +23,7 @@ Resources:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       ApiId: !Ref ApiGwFacade
-      StageName: $default
+      StageName: v1
       AutoDeploy: true
       Description: Default stage for api
 
@@ -49,7 +49,7 @@ Resources:
       Name: !Sub api.${DomainName}.
       Type: A
       AliasTarget:
-        DNSName: !Sub ${ApiGwFacade}.execute-api.${AWS::Region}.amazonaws.com
+        DNSName: !GetAtt ApiGwCustomDomain.RegionalDomainName
         HostedZoneId: !GetAtt ApiGwCustomDomain.RegionalHostedZoneId
         EvaluateTargetHealth: false
 
