@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for KMS keys used for generation and validation JWT token
+
+Parameters:
+  SolutionName:
+    Type: String
+
+Resources:
+  JWTTokenHMAC256KeyValueSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: This parameter stores secure string that contains a private key for HMAC256 generation and verification of JWT token
+      GenerateSecretString:
+        PasswordLength: 64
+      Name: !Sub '/${SolutionName}/Secret/JWTTokenHMACKey'

@@ -3,6 +3,7 @@
 SOLUTION_NAME=$1
 DOMAIN_NAME=$2
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
+BASE_PATH=$(pwd)
 
 wait_stack_creation_completed() {
   STACK_NAME=$1
@@ -27,7 +28,7 @@ wait_stack_update_completed() {
 }
 
 build_app() {
-  ./mvnw clean verify
+  ./mvnw clean package
 }
 
 upload_artifacts_to_s3() {
@@ -36,7 +37,7 @@ upload_artifacts_to_s3() {
   ls -1 | grep 'lambda$' | while IFS= read -r filename; do
     echo "Processing file: '$filename'"
 
-    aws s3 cp ${filename}/target/${filename}.jar s3://${S3_BUCKET}/${TIMESTAMP}/
+    aws s3 cp ${BASE_PATH}/${filename}/target/${filename}.jar s3://${S3_BUCKET}/${TIMESTAMP}/
   done
 }
 
@@ -44,10 +45,10 @@ create_s3() {
   CURRENT_SOLUTION_NAME="$SOLUTION_NAME-s3"
   STACK_EXISTS=$(aws cloudformation describe-stacks --stack-name "$CURRENT_SOLUTION_NAME" || echo "create")
   if [ "$STACK_EXISTS" == "create" ]; then
-    aws cloudformation create-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://cfn/s3-storage.cfn.yaml --parameters ParameterKey=SolutionName,ParameterValue=$CURRENT_SOLUTION_NAME
+    aws cloudformation create-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://${BASE_PATH}/cfn/s3-storage.cfn.yaml --parameters ParameterKey=SolutionName,ParameterValue=$CURRENT_SOLUTION_NAME
     wait_stack_creation_completed "$CURRENT_SOLUTION_NAME"
   else
-    WAIT_FOR_UPDATE=$(aws cloudformation update-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://cfn/s3-storage.cfn.yaml --parameters ParameterKey=SolutionName,UsePreviousValue=true || echo "no updates")
+    WAIT_FOR_UPDATE=$(aws cloudformation update-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://${BASE_PATH}/cfn/s3-storage.cfn.yaml --parameters ParameterKey=SolutionName,UsePreviousValue=true || echo "no updates")
     if [ "$WAIT_FOR_UPDATE" != "no updates" ]; then
       wait_stack_update_completed "$CURRENT_SOLUTION_NAME"
     fi
@@ -58,10 +59,10 @@ create_domain_with_certificate() {
   CURRENT_SOLUTION_NAME="$SOLUTION_NAME-domain"
   STACK_EXISTS=$(aws cloudformation describe-stacks --stack-name "$CURRENT_SOLUTION_NAME" || echo "create")
   if [ "$STACK_EXISTS" == "create" ]; then
-    aws cloudformation create-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://cfn/domain.cfn.yaml --parameters ParameterKey=SolutionName,ParameterValue=$CURRENT_SOLUTION_NAME ParameterKey=DomainName,ParameterValue=$DOMAIN_NAME
+    aws cloudformation create-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://${BASE_PATH}/cfn/domain.cfn.yaml --parameters ParameterKey=SolutionName,ParameterValue=$CURRENT_SOLUTION_NAME ParameterKey=DomainName,ParameterValue=$DOMAIN_NAME
     wait_stack_creation_completed "$CURRENT_SOLUTION_NAME"
   else
-    WAIT_FOR_UPDATE=$(aws cloudformation update-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://cfn/domain.cfn.yaml --parameters ParameterKey=SolutionName,UsePreviousValue=true ParameterKey=DomainName,UsePreviousValue=true || echo "no updates")
+    WAIT_FOR_UPDATE=$(aws cloudformation update-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://${BASE_PATH}/cfn/domain.cfn.yaml --parameters ParameterKey=SolutionName,UsePreviousValue=true ParameterKey=DomainName,UsePreviousValue=true || echo "no updates")
     if [ "$WAIT_FOR_UPDATE" != "no updates" ]; then
       wait_stack_update_completed "$CURRENT_SOLUTION_NAME"
     fi

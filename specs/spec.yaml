@@ -6,7 +6,41 @@ tags:
   - name: Auth
   - name: Login
 paths:
-  /login:
+  /login/generate:
+    summary: Making a call to this resource you'll generate login request, that can be fulfilled by reaching email
+    post:
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateTokenRequest"
+        required: true
+      responses:
+        "200":
+          description: 200 response
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Credentials:
+              schema:
+                type: string
+            Set-Cookie:
+              schema:
+                type: string
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Empty"
+  /login/perform:
     summary: This endpoint is used to login/register user
     post:
       tags:
@@ -33,14 +67,14 @@ paths:
             Set-Cookie:
               schema:
                 type: string
-                example: sessionId=<token>; Secure; Path=/; HttpOnly
+                example: sessionId=<token>; Secure; Path=/; HttpOnly; Max-Age=0
             Access-Control-Allow-Headers:
               schema:
                 type: string
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Empty"
+                $ref: "#/components/schemas/LoginResponse"
         "401":
           description: 200 response
           headers:
@@ -48,41 +82,6 @@ paths:
               schema:
                 type: string
             Access-Control-Allow-Methods:
-              schema:
-                type: string
-            Access-Control-Allow-Headers:
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Empty"
-
-  /login/generate:
-    summary: Making a call to this resource you'll generate login request, that can be fulfilled by reaching email
-    post:
-      tags:
-        - Auth
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GenerateTokenRequest"
-        required: true
-      responses:
-        "200":
-          description: 200 response
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
-            Access-Control-Allow-Methods:
-              schema:
-                type: string
-            Access-Control-Allow-Credentials:
-              schema:
-                type: string
-            Set-Cookie:
               schema:
                 type: string
             Access-Control-Allow-Headers:
@@ -223,6 +222,12 @@ components:
         token:
           type: string
         email:
+          type: string
+    LoginResponse:
+      title: Login token use to protect against CSRF
+      type: object
+      properties:
+        token:
           type: string
     GenerateTokenRequest:
       title: Generate Token Request

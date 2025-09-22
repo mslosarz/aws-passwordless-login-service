@@ -1,6 +1,7 @@
 package pl.software2.awsblocks.service;
 
 import org.junit.jupiter.api.Test;
+import pl.software2.awsblocks.dataaccess.LoginRequests;
 import pl.software2.awsblocks.model.GenerateTokenRequest;
 
 import java.util.random.RandomGenerator;
@@ -8,14 +9,14 @@ import java.util.random.RandomGenerator;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-class ProcessGenerateLoginRequestServiceTest {
-    private final SendTokenViaEmailService sendTokenViaEmailService = mock(SendTokenViaEmailService.class);
-    private final StoreLoginRequestService storeLoginRequestService = mock(StoreLoginRequestService.class);
+class ProcessGenerateLoginRequestTest {
+    private final SendTokenViaEmail sendTokenViaEmail = mock(SendTokenViaEmail.class);
+    private final LoginRequests loginRequests = mock(LoginRequests.class);
     private final RandomGenerator randomGenerator = mock(RandomGenerator.class);
-    private final ProcessGenerateLoginRequestService service = new ProcessGenerateLoginRequestService(
+    private final ProcessGenerateLoginRequest service = new ProcessGenerateLoginRequest(
             randomGenerator,
-            sendTokenViaEmailService,
-            storeLoginRequestService
+            sendTokenViaEmail,
+            loginRequests
     );
 
     @Test
@@ -30,8 +31,8 @@ class ProcessGenerateLoginRequestServiceTest {
         // then
         assertThat(result).isNotNull();
         verify(randomGenerator).nextInt(100_000_000);
-        verify(sendTokenViaEmailService).sendEmailViaSes("test@email.com", "00123456");
-        verify(storeLoginRequestService).createOrUpdateLoginRequest("test@email.com", "00123456");
-        verifyNoMoreInteractions(storeLoginRequestService, sendTokenViaEmailService, randomGenerator);
+        verify(sendTokenViaEmail).sendEmailViaSes("test@email.com", "00123456");
+        verify(loginRequests).createOrUpdateLoginRequest("test@email.com", "00123456");
+        verifyNoMoreInteractions(loginRequests, sendTokenViaEmail, randomGenerator);
     }
 }

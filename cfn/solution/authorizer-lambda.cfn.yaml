@@ -32,6 +32,7 @@ Resources:
       EnableSimpleResponses: true
       IdentitySource:
         - $request.header.Cookie
+        - $request.header.Authorization
       AuthorizerCredentialsArn: !GetAtt ApiGatewayAuthorizerRole.Arn
 
   LambdaApiGatewayInvoke:
@@ -56,6 +57,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: java21
       Timeout: 3
+      Environment:
+        Variables:
+          DOMAIN_NAME: !Ref DomainName
+          JWT_TOKEN_SECRET_NAME: !Sub '/${SolutionName}/Secret/JWTTokenHMACKey'
       Tags:
         - Key: SolutionName
           Value: !Ref SolutionName
@@ -106,6 +111,15 @@ Resources:
                 Resource:
                   - !Ref LoginRequestsTableArn
                   - !Ref UsersTableArn
+        - PolicyName: jwt-token-secret-value-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/${SolutionName}/Secret/JWTTokenHMACKey*
 
   ApiGatewayAuthorizerRole:
     Type: AWS::IAM::Role

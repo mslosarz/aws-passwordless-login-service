@@ -8,6 +8,8 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttri
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
+import java.time.ZonedDateTime;
+
 @Data
 @Builder
 @DynamoDbBean
@@ -15,6 +17,9 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @NoArgsConstructor
 public class UsersTable {
     private String email;
+    private ZonedDateTime createdAt;
+    private ZonedDateTime lastLoginAt;
+
     @DynamoDbPartitionKey
     @DynamoDbAttribute("email")
     public String getEmail() {

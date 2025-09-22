@@ -6,14 +6,16 @@
   "type": "REQUEST",
   "routeArn": "arn:aws:execute-api:eu-west-1:yyyyyyyyyyyyy:rh2gtinzme/$default/GET/logout/echo",
   "identitySource": [
-    "toke2n"
+    "cookie",
+    "Bearer jwt"
   ],
   "cookies": [
-    "toke2n"
+    "cookie"
   ],
   "headers": {
     "accept": "*/*",
     "content-length": "0",
+    "authorization": "Bearer jwt",
     "cookie": "toke2n",
     "host": "rh2gtinzme.execute-api.eu-west-1.amazonaws.com",
     "user-agent": "curl/7.81.0",

@@ -81,6 +81,8 @@ Resources:
           LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTableName
           USERS_TABLE: !Ref UsersTableName
           TOKEN_VALIDITY_IN_MINUTES: 10
+          ACCESS_TOKEN_TTL_IN_MINUTES: 60
+          JWT_TOKEN_SECRET_NAME: !Sub '/${SolutionName}/Secret/JWTTokenHMACKey'
       Tags:
         - Key: SolutionName
           Value: !Ref SolutionName
@@ -142,3 +144,12 @@ Resources:
                   - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*
                   - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:template/${EMailTemplate}
                   - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${EMailConfigurationSet}
+        - PolicyName: jwt-token-secret-value-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/${SolutionName}/Secret/JWTTokenHMACKey*

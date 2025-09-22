@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import lombok.extern.slf4j.Slf4j;
 import pl.software2.awsblocks.lambda.exceptions.BadRequestException;
 import pl.software2.awsblocks.lambda.exceptions.NotFoundException;
+import pl.software2.awsblocks.lambda.exceptions.UnauthorizedException;
 import pl.software2.awsblocks.lambda.routes.content.ApiGatewayResponseProducer;
 
 @Slf4j
@@ -15,9 +16,6 @@ public abstract class AbstractRouteHandler<T> implements RouteHandler {
         this.producer = producer;
     }
 
-    @Override
-    public abstract boolean supports(APIGatewayV2HTTPEvent request);
-
     protected abstract T handleRequest(APIGatewayV2HTTPEvent request);
 
     @Override
@@ -27,6 +25,9 @@ public abstract class AbstractRouteHandler<T> implements RouteHandler {
         } catch (BadRequestException e) {
             log.error("Bad request", e);
             return producer.badRequest(e.getMessage());
+        } catch (UnauthorizedException e) {
+            log.error("Unauthorized", e);
+            return producer.unauthorized();
         } catch (NotFoundException e) {
             log.error("Not found", e);
             return producer.notFound(request.getRawPath(), e.getMessage());

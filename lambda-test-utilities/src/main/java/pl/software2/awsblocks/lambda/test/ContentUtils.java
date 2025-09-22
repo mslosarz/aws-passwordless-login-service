@@ -30,9 +30,13 @@ public class ContentUtils {
         return Base64.getEncoder().encodeToString(bytes);
     }
 
-    public static String unzip(byte[] bytes) throws Exception {
-        var gis = new GZIPInputStream(new ByteArrayInputStream(bytes));
-        return new String(gis.readAllBytes());
+    public static String unzip(byte[] bytes) {
+        try {
+            var gis = new GZIPInputStream(new ByteArrayInputStream(bytes));
+            return new String(gis.readAllBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static byte[] zip(String bytes) throws Exception {

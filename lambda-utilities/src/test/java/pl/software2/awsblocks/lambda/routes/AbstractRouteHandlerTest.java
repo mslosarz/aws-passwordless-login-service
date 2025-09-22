@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import org.junit.jupiter.api.Test;
 import pl.software2.awsblocks.lambda.exceptions.BadRequestException;
 import pl.software2.awsblocks.lambda.exceptions.NotFoundException;
+import pl.software2.awsblocks.lambda.model.Route;
 import pl.software2.awsblocks.lambda.routes.content.ApiGatewayResponseProducer;
 
 import java.util.function.Supplier;
@@ -90,7 +91,7 @@ class AbstractRouteHandlerTest {
         }
 
         @Override
-        public boolean supports(APIGatewayV2HTTPEvent request) {
+        public boolean supports(Route request) {
             return false;
         }
 

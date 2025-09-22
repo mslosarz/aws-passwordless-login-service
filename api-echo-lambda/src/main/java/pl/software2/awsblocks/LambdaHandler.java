@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import pl.software2.awsblocks.lambda.model.Route;
 import pl.software2.awsblocks.lambda.routes.RouteHandler;
 import pl.software2.awsblocks.lambda.routes.content.ApiGatewayResponseProducer;
 
@@ -14,8 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
-
-import static java.util.Comparator.comparingInt;
 
 @Slf4j
 public class LambdaHandler implements RequestStreamHandler {
@@ -42,8 +41,7 @@ public class LambdaHandler implements RequestStreamHandler {
         log.info("Received APIGatewayV2HTTPEvent: {}", event);
 
         APIGatewayV2HTTPResponse response = routes.stream()
-                .sorted(comparingInt(RouteHandler::priority))
-                .filter(route -> route.supports(event))
+                .filter(route -> route.supports(Route.fromRequest(event)))
                 .findFirst()
                 .map(routeHandler -> routeHandler.handle(event))
                 .orElse(responseProducer.notFound(event.getRawPath()));

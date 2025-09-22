@@ -51,7 +51,7 @@ Resources:
       Code:
         S3Bucket: !Ref S3Bucket
         S3Key: !Sub ${Version}/${ArtifactName}.jar
-      Description: !Sub 'Lambda for /login/{proxy+} HTTP API GW'
+      Description: !Sub 'Lambda for /echo/{proxy+} HTTP API GW'
       FunctionName: !Sub '${SolutionName}-${LambdaName}-${AWS::AccountId}'
       Handler: pl.software2.awsblocks.LambdaHandler::handleRequest
       MemorySize: 512

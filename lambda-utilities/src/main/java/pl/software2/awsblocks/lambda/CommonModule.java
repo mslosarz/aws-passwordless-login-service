@@ -31,6 +31,7 @@ public class CommonModule {
     }
 
     @Provides
+    @Singleton
     static Clock clock() {
         return Clock.systemDefaultZone();
     }

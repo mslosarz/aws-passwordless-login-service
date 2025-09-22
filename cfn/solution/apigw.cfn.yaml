@@ -19,13 +19,16 @@ Resources:
       Description: !Sub 'This login service for ${SolutionName}.'
       ProtocolType: HTTP
 
-  ApiGwDefaultStage:
+  ApiGwV1Stage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       ApiId: !Ref ApiGwFacade
       StageName: v1
       AutoDeploy: true
       Description: Default stage for api
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 2
+        ThrottlingRateLimit: 4
 
   ApiGwCustomDomain:
     Type: AWS::ApiGatewayV2::DomainName
@@ -40,7 +43,7 @@ Resources:
     Properties:
       ApiId: !Ref ApiGwFacade
       DomainName: !Sub api.${DomainName}
-      Stage: !Ref ApiGwDefaultStage
+      Stage: !Ref ApiGwV1Stage
 
   APIDNSRecord:
     Type: AWS::Route53::RecordSet

@@ -2,6 +2,7 @@ package pl.software2.awsblocks.routes;
 
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
+import pl.software2.awsblocks.lambda.model.Route;
 import pl.software2.awsblocks.lambda.routes.AbstractRouteHandler;
 import pl.software2.awsblocks.lambda.routes.content.ApiGatewayResponseProducer;
 
@@ -15,12 +16,7 @@ public class Echo extends AbstractRouteHandler<APIGatewayV2HTTPEvent> {
     }
 
     @Override
-    public int priority() {
-        return Integer.MIN_VALUE;
-    }
-
-    @Override
-    public boolean supports(APIGatewayV2HTTPEvent request) {
+    public boolean supports(Route request) {
         return true;
     }
 

@@ -19,7 +19,7 @@ import static pl.software2.awsblocks.config.EnvironmentVariables.*;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__(@Inject))
-public class SendTokenViaEmailService {
+public class SendTokenViaEmail {
     private final SesV2Client sesV2Client;
     private final LambdaConfig lambdaConfig;
     private final ObjectMapper objectMapper;

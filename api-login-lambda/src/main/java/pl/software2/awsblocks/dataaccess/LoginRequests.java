@@ -1,4 +1,4 @@
-package pl.software2.awsblocks.service;
+package pl.software2.awsblocks.dataaccess;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,19 +20,31 @@ import static pl.software2.awsblocks.config.EnvironmentVariables.TOKEN_VALIDITY_
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__(@Inject))
-public class StoreLoginRequestService {
+public class LoginRequests {
     private final DynamoDbEnhancedClient dynamoDbEnhancedClient;
     private final LambdaConfig lambdaConfig;
     private final Clock clock;
 
     public void createOrUpdateLoginRequest(String email, String token) {
-        DynamoDbTable<LoginRequestsTable> table = dynamoDbEnhancedClient.table(lambdaConfig.getValue(LOGIN_REQUESTS_TABLE.name()), TableSchema.fromBean(LoginRequestsTable.class));
         LoginRequestsTable loginRequest = createRequestObject(email, token);
-        if (requestDoesNotExist(email, table)) {
+        var table = getTable();
+        if (requestDoesNotExist(table, email)) {
             table.putItem(loginRequest);
         } else {
             table.updateItem(loginRequest);
         }
+    }
+
+    public LoginRequestsTable getLoginRequest(String email) {
+        return getLoginRequest(getTable(), email);
+    }
+
+    private LoginRequestsTable getLoginRequest(DynamoDbTable<LoginRequestsTable> table, String email) {
+        return table.getItem(Key.builder().partitionValue(email).build());
+    }
+
+    private DynamoDbTable<LoginRequestsTable> getTable() {
+        return dynamoDbEnhancedClient.table(lambdaConfig.getValue(LOGIN_REQUESTS_TABLE.name()), TableSchema.fromBean(LoginRequestsTable.class));
     }
 
     private LoginRequestsTable createRequestObject(String email, String token) {
@@ -44,7 +56,7 @@ public class StoreLoginRequestService {
                 .recalculateExpiration(clock, minutes);
     }
 
-    private static boolean requestDoesNotExist(String email, DynamoDbTable<LoginRequestsTable> table) {
-        return table.getItem(Key.builder().partitionValue(email).build()) == null;
+    private boolean requestDoesNotExist(DynamoDbTable<LoginRequestsTable> table, String email) {
+        return getLoginRequest(table, email) == null;
     }
 }

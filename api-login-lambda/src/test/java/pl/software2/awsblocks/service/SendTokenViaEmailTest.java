@@ -12,10 +12,10 @@ import software.amazon.awssdk.services.sesv2.model.Template;
 
 import static org.mockito.Mockito.*;
 
-class SendTokenViaEmailServiceTest {
+class SendTokenViaEmailTest {
     private final SesV2Client sesV2Client = mock(SesV2Client.class);
     private final LambdaConfig lambdaConfig = mock(LambdaConfig.class);
-    private final SendTokenViaEmailService service = new SendTokenViaEmailService(
+    private final SendTokenViaEmail service = new SendTokenViaEmail(
             sesV2Client,
             lambdaConfig,
             new ObjectMapper()

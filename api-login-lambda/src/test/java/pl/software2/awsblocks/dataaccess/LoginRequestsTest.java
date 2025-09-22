@@ -1,7 +1,8 @@
-package pl.software2.awsblocks.service;
+package pl.software2.awsblocks.dataaccess;
 
 import org.junit.jupiter.api.Test;
 import pl.software2.awsblocks.lambda.config.LambdaConfig;
+import pl.software2.awsblocks.lambda.test.Fixtures;
 import pl.software2.awsblocks.persistence.model.loginrequests.LoginRequestsTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -9,8 +10,6 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
 import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
 
 import static java.time.Duration.ofMinutes;
 import static org.mockito.Mockito.*;
@@ -18,12 +17,12 @@ import static pl.software2.awsblocks.config.EnvironmentVariables.LOGIN_REQUESTS_
 import static pl.software2.awsblocks.config.EnvironmentVariables.TOKEN_VALIDITY_IN_MINUTES;
 import static software.amazon.awssdk.enhanced.dynamodb.TableSchema.fromBean;
 
-class StoreLoginRequestServiceTest {
+class LoginRequestsTest {
     private final DynamoDbEnhancedClient dynamoDbEnhancedClient = mock(DynamoDbEnhancedClient.class);
     private final LambdaConfig lambdaConfig = mock(LambdaConfig.class);
     private final DynamoDbTable<LoginRequestsTable> table = (DynamoDbTable<LoginRequestsTable>) mock(DynamoDbTable.class);
-    private final Clock clock = Clock.fixed(Instant.parse("2025-01-01T12:00:00.00Z"), ZoneId.of("CET"));
-    private final StoreLoginRequestService service = new StoreLoginRequestService(
+    private final Clock clock = Fixtures.fixedClock();
+    private final LoginRequests service = new LoginRequests(
             dynamoDbEnhancedClient,
             lambdaConfig,
             clock

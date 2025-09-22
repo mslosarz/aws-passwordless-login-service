@@ -101,6 +101,14 @@ Resources:
         LambdaName: 'route-echo'
         LambdaAuthorizer: !GetAtt AuthorizerLambdaStack.Outputs.LambdaAuthorizer
 
+
+  KeysStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${S3Bucket}.s3.amazonaws.com/${Version}/cfn/solution/keys.cfn.yaml
+      Parameters:
+        SolutionName: !Ref SolutionName
+
 Outputs:
   ApiGwFacade:
     Description: Api Gw execution url
