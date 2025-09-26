@@ -41,7 +41,8 @@ public class GenerateJWTToken {
             var sha256 = MessageDigest.getInstance("SHA-256");
             var sessionFingerprint = Hex.encodeHexString(sha256.digest(sessionId.getBytes(StandardCharsets.UTF_8)));
             Instant now = clock.instant();
-            return new TokenWithSessionId(JWT.create().withSubject(loginRequest.email())
+            return new TokenWithSessionId(JWT.create()
+                    .withSubject(loginRequest.email())
                     .withExpiresAt(now.plus(accessTokenTTL))
                     .withIssuer(config.getValue(DOMAIN_NAME.name()))
                     .withIssuedAt(now)

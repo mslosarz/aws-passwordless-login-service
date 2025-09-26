@@ -62,6 +62,8 @@ Resources:
         ApiId: !GetAtt ApiStack.Outputs.ApiGwId
         LambdaName: 'auth'
 
+        DomainName: !Ref DomainName
+
         LoginRequestsTableArn: !GetAtt PersistenceStack.Outputs.LoginRequestsTableArn
         UsersTableArn: !GetAtt PersistenceStack.Outputs.UsersTableArn
 

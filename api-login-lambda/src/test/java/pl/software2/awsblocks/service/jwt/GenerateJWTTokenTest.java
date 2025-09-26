@@ -33,7 +33,7 @@ class GenerateJWTTokenTest {
 
         // then
         assertThat(tokenWithSessionId).isNotNull();
-        assertThat(tokenWithSessionId.token()).isEqualTo("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlbWlhbEB0ZXN0LmNvbSIsImV4cCI6MTczNTczNjQwMCwiaXNzIjoiZG9tYWluLmNvbSIsImlhdCI6MTczNTczMjgwMCwibmJmIjoxNzM1NzMyODAwLCJzZXNzaW9uSWQiOiI3M2MxOTBjNzk0YTU2OTVkYmU4ZTA0M2RlNTMwMjNlMjk4MGI4MDJiY2MyZTQ5OTIwYzZkZjhkZjY3MTRlMTVjIn0.jHpxZXBZQ7y3b4gL4OmrL5amclARAlaNcye0KoVfpzM");
+        assertThat(tokenWithSessionId.token()).isEqualTo("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlbWlhbEB0ZXN0LmNvbSIsImV4cCI6MTczNTczNjQwMCwiaXNzIjoiZG9tYWluLmNvbSIsImlhdCI6MTczNTczMjgwMCwibmJmIjoxNzM1NzMyODAwLCJzZXNzaW9uRmluZ2VycHJpbnQiOiI3M2MxOTBjNzk0YTU2OTVkYmU4ZTA0M2RlNTMwMjNlMjk4MGI4MDJiY2MyZTQ5OTIwYzZkZjhkZjY3MTRlMTVjIiwicm9sZXMiOlsidXNlciJdLCJlbWFpbCI6ImVtaWFsQHRlc3QuY29tIn0.XxpHLgUI_8zZpkSvWJsshZLETswI6JdoFzpWak-jgHE");
         assertThat(tokenWithSessionId.sessionId()).isEqualTo("000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
         verify(random).nextBytes(any(byte[].class));
         verify(config).getValue(ACCESS_TOKEN_TTL_IN_MINUTES.name());

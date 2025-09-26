@@ -14,6 +14,8 @@ Parameters:
     Type: String
   LambdaName:
     Type: String
+  DomainName:
+    Type: String
   LoginRequestsTableArn:
     Type: String
   UsersTableArn:

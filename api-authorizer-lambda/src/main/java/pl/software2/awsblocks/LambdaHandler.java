@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2CustomAuthorizerEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import pl.software2.awsblocks.model.ApiGwAuthorizerBasicResponse;
 import pl.software2.awsblocks.service.LoadJWTTokenSecret;
 import pl.software2.awsblocks.service.ValidateJWTToken;
 
@@ -40,6 +41,16 @@ public class LambdaHandler implements RequestStreamHandler {
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
         loadJWTTokenSecret.loadSecret();
         var event = objectMapper.readValue(inputStream, APIGatewayV2CustomAuthorizerEvent.class);
-        objectMapper.writeValue(outputStream, validateJWTToken.validateAuthRequest(event));
+        try {
+            objectMapper.writeValue(outputStream, validateJWTToken.validateAuthRequest(event));
+        } catch (Exception e) {
+            objectMapper.writeValue(outputStream, unauthorizedResponse());
+        }
+    }
+
+    private static ApiGwAuthorizerBasicResponse unauthorizedResponse() {
+        return ApiGwAuthorizerBasicResponse.builder()
+                .authorized(false)
+                .build();
     }
 }
