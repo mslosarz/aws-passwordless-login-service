@@ -13,12 +13,14 @@ import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import static java.util.Collections.emptyMap;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_ENCODING;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.hc.core5.http.HttpStatus.*;
 
 public class ApiGatewayResponseProducer {
     private static final Map<String, String> gzipJsonHeader = Map.of(
-            "Content-Type", "application/json",
-            "Content-Encoding", "gzip"
+            CONTENT_TYPE, "application/json",
+            CONTENT_ENCODING, "gzip"
     );
     private final ObjectMapper objectMapper;
 

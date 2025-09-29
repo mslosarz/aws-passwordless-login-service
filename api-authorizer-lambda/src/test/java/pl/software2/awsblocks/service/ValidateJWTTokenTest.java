@@ -15,6 +15,7 @@ import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.*;
+import static pl.software2.awsblocks.lambda.model.jwt.JwtTokenSharedFields.USER_ID;
 
 class ValidateJWTTokenTest {
     private final APIGatewayV2CustomAuthorizerEvent event = mock(APIGatewayV2CustomAuthorizerEvent.class);
@@ -35,7 +36,7 @@ class ValidateJWTTokenTest {
 
         // then
         assertThat(apiGwAuthorizerBasicResponse.isAuthorized()).isTrue();
-        assertThat(apiGwAuthorizerBasicResponse.getContext()).isEqualTo(Map.of("user", "emial@test.com"));
+        assertThat(apiGwAuthorizerBasicResponse.getContext()).isEqualTo(Map.of(USER_ID, "emial@test.com"));
         verify(config).getValue(EnvironmentVariables.DOMAIN_NAME.name());
     }
 

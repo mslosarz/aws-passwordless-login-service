@@ -23,6 +23,7 @@ import java.util.random.RandomGenerator;
 import static java.lang.Integer.parseInt;
 import static pl.software2.awsblocks.config.EnvironmentVariables.ACCESS_TOKEN_TTL_IN_MINUTES;
 import static pl.software2.awsblocks.config.EnvironmentVariables.DOMAIN_NAME;
+import static pl.software2.awsblocks.lambda.model.jwt.JwtTokenSharedFields.*;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__(@Inject))
@@ -47,9 +48,9 @@ public class GenerateJWTToken {
                     .withIssuer(config.getValue(DOMAIN_NAME.name()))
                     .withIssuedAt(now)
                     .withNotBefore(now)
-                    .withClaim("sessionFingerprint", sessionFingerprint)
-                    .withClaim("roles", List.of("user"))
-                    .withClaim("email", loginRequest.email())
+                    .withClaim(CLAIM_WITH_SESSION_FINGERPRINT, sessionFingerprint)
+                    .withClaim(CLAIM_WITH_ROLES, List.of(USER_ROLE))
+                    .withClaim(CLAIM_WITH_EMAIL, loginRequest.email())
                     .withAudience()
                     .sign(Algorithm.HMAC256(jwtTokenSecret.getSecret())), sessionId);
         } catch (NoSuchAlgorithmException e) {

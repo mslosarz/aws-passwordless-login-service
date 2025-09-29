@@ -23,6 +23,7 @@ import java.time.Clock;
 import java.util.Map;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
+import static pl.software2.awsblocks.lambda.model.jwt.JwtTokenSharedFields.*;
 
 @Slf4j
 @AllArgsConstructor(onConstructor_ = @__(@Inject))
@@ -30,14 +31,15 @@ public class ValidateJWTToken {
     private final JWTTokenSecret jwtTokenSecret;
     private final LambdaConfig config;
     private final Clock clock;
+
     public ApiGwAuthorizerBasicResponse validateAuthRequest(APIGatewayV2CustomAuthorizerEvent event) {
         DecodedJWT decodedJWT = decodeToken(event);
-        if(!decodedJWT.getClaim("roles").asList(String.class).contains("user")){
+        if (!decodedJWT.getClaim(CLAIM_WITH_ROLES).asList(String.class).contains(USER_ROLE)) {
             throw new UnauthorizedException("User does not have required role");
         }
         return ApiGwAuthorizerBasicResponse.builder()
                 .authorized(true)
-                .context(Map.of("user", decodedJWT.getClaim("email").asString()))
+                .context(Map.of(USER_ID, decodedJWT.getClaim(CLAIM_WITH_EMAIL).asString()))
                 .build();
     }
 
@@ -52,11 +54,11 @@ public class ValidateJWTToken {
         try {
             MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
             var sessionFingerprint = Hex.encodeHexString(sha256.digest(sessionId.getBytes(StandardCharsets.UTF_8)));
-            JWTVerifier jwtVerifier = ((JWTVerifier.BaseVerification)JWT.require(Algorithm.HMAC256(jwtTokenSecret.getSecret()))
+            JWTVerifier jwtVerifier = ((JWTVerifier.BaseVerification) JWT.require(Algorithm.HMAC256(jwtTokenSecret.getSecret()))
                     .withIssuer(config.getValue(EnvironmentVariables.DOMAIN_NAME.name()))
-                    .withClaim("sessionFingerprint", sessionFingerprint)
-                    .withClaimPresence("roles")
-                    .withClaimPresence("email"))
+                    .withClaim(CLAIM_WITH_SESSION_FINGERPRINT, sessionFingerprint)
+                    .withClaimPresence(CLAIM_WITH_ROLES)
+                    .withClaimPresence(CLAIM_WITH_EMAIL))
                     .build(clock);
             return jwtVerifier.verify(jwt);
         } catch (NoSuchAlgorithmException e) {
