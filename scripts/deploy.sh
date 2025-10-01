@@ -43,7 +43,7 @@ upload_artifacts_to_s3() {
 }
 
 create_s3() {
-  CURRENT_SOLUTION_NAME="$SOLUTION_NAME-s3"
+  CURRENT_SOLUTION_NAME="$SOLUTION_NAME-$PROJECT-s3"
   STACK_EXISTS=$(aws cloudformation describe-stacks --stack-name "$CURRENT_SOLUTION_NAME" || echo "create")
   if [ "$STACK_EXISTS" == "create" ]; then
     aws cloudformation create-stack --stack-name "$CURRENT_SOLUTION_NAME" --template-body file://${BASE_PATH}/cfn/s3-storage.cfn.yaml --parameters ParameterKey=SolutionName,ParameterValue=$CURRENT_SOLUTION_NAME
