@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
+import static org.apache.hc.core5.http.HttpHeaders.SET_COOKIE;
 import static pl.software2.awsblocks.config.EnvironmentVariables.ACCESS_TOKEN_TTL_IN_MINUTES;
 
 @Slf4j
@@ -52,7 +53,7 @@ public class ProcessLoginRequest {
         var cookieSession = format("sessionId=%s; Secure; Path=/; HttpOnly; Max-Age=%d", tokenWithSessionId.sessionId(), accessTokenTTL.toSeconds());
         return producer.ok(
                 new LoginResponse(tokenWithSessionId.token()),
-                Map.of("Set-Cookie", cookieSession)
+                Map.of(SET_COOKIE, cookieSession)
         );
     }
 }

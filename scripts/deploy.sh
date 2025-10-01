@@ -4,6 +4,7 @@ SOLUTION_NAME=$1
 DOMAIN_NAME=$2
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 BASE_PATH=$(pwd)
+PROJECT=paswordless
 
 wait_stack_creation_completed() {
   STACK_NAME=$1
@@ -88,14 +89,14 @@ collect_lambda_names() {
 deploy_solution() {
   S3_BUCKET=$1
 
-  CURRENT_SOLUTION_NAME="$SOLUTION_NAME-paswordless"
+  CURRENT_SOLUTION_NAME="$SOLUTION_NAME-$PROJECT"
 
   STACK_EXISTS=$(aws cloudformation describe-stacks --stack-name "$CURRENT_SOLUTION_NAME" || echo "create")
   LAMBDAS=$(collect_lambda_names)
   if [ "$STACK_EXISTS" == "create" ]; then
     echo "creating stack..."
     aws cloudformation create-stack --stack-name "$CURRENT_SOLUTION_NAME" \
-        --template-url https://${S3_BUCKET}.s3.amazonaws.com/${TIMESTAMP}/cfn/paswordless-login-service.cfn.yaml \
+        --template-url https://${S3_BUCKET}.s3.amazonaws.com/${TIMESTAMP}/cfn/${PROJECT}-login-service.cfn.yaml \
         --parameters ParameterKey=SolutionName,ParameterValue=$CURRENT_SOLUTION_NAME \
                      ParameterKey=S3Bucket,ParameterValue=$S3_BUCKET \
                      ParameterKey=DomainName,ParameterValue=$DOMAIN_NAME \
@@ -107,7 +108,7 @@ deploy_solution() {
   else
     echo "updating stack..."
     WAIT_FOR_UPDATE=$(aws cloudformation update-stack --stack-name "$CURRENT_SOLUTION_NAME" \
-                          --template-url https://${S3_BUCKET}.s3.amazonaws.com/${TIMESTAMP}/cfn/paswordless-login-service.cfn.yaml \
+                          --template-url https://${S3_BUCKET}.s3.amazonaws.com/${TIMESTAMP}/cfn/${PROJECT}-login-service.cfn.yaml \
                           --parameters ParameterKey=SolutionName,UsePreviousValue=true \
                                        ParameterKey=S3Bucket,UsePreviousValue=true \
                                        ParameterKey=DomainName,UsePreviousValue=true \
@@ -124,12 +125,12 @@ deploy_solution() {
 create_s3
 create_domain_with_certificate
 
-S3_BUCKET=$(aws cloudformation describe-stacks --stack-name "$SOLUTION_NAME-s3" --output text  --query 'Stacks[0].Outputs[?OutputKey==`S3Bucket`].OutputValue')
+S3_BUCKET=$(aws cloudformation describe-stacks --stack-name "$SOLUTION_NAME-$PROJECT-s3" --output text  --query 'Stacks[0].Outputs[?OutputKey==`S3Bucket`].OutputValue')
 build_app
 upload_artifacts_to_s3 "$S3_BUCKET"
 deploy_solution "$S3_BUCKET"
 
-SITE_URL=$(aws cloudformation describe-stacks --stack-name "$SOLUTION_NAME-paswordless" --output text  --query 'Stacks[0].Outputs[?OutputKey==`ApiGwFacade`].OutputValue')
+SITE_URL=$(aws cloudformation describe-stacks --stack-name "$SOLUTION_NAME-$PROJECT" --output text  --query 'Stacks[0].Outputs[?OutputKey==`ApiGwFacade`].OutputValue')
 DOMAIN_ENDPOINT=$(echo "https://api.${DOMAIN_NAME}")
 echo "============================================"
 echo "Visit: $DOMAIN_ENDPOINT"

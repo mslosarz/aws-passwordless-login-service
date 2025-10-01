@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SOLUTION_NAME=$1
+PROJECT=paswordless
 
 delete_stack_and_wait() {
   STACK=$1
@@ -12,7 +13,7 @@ delete_stack_and_wait() {
 
 S3_BUCKET=$(aws cloudformation describe-stacks --stack-name "$SOLUTION_NAME-s3" --output text  --query 'Stacks[0].Outputs[?OutputKey==`S3Bucket`].OutputValue')
 
-delete_stack_and_wait "$SOLUTION_NAME-paswordless"
+delete_stack_and_wait "$SOLUTION_NAME-$PROJECT"
 
 echo "Cleaning... ${S3_BUCKET}"
 
@@ -21,6 +22,6 @@ echo "Cleaning... ${S3_BUCKET}"
 #     | jq -r '.[] | "--key '\''" + .[0] + "'\'' --version-id " + .[1]' \
 #     | xargs -L1 aws s3api delete-object --bucket "${S3_BUCKET}"
 
-#delete_stack_and_wait "$SOLUTION_NAME-s3"
+#delete_stack_and_wait "$SOLUTION_NAME-$PROJECT-s3"
 #delete_stack_and_wait "$SOLUTION_NAME-domain"
 
